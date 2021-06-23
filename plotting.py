@@ -69,6 +69,7 @@ def plot_comparison(
         linewidth=3,
         label="orig_sur",
     )
+    axs[0].set_ylim([np.min(rss_orig_sur) * 0.98, np.max(rss_orig_sur) * 1.02])
     axs[0].set_title("Original signal")
 
     for i in range(rssr_orig_sur.shape[1]):
@@ -77,6 +78,7 @@ def plot_comparison(
         idxpeak_fitt, rss_fitt[idxpeak_fitt], "r*", label="fitt-peaks", markersize=20
     )
     axs[1].plot(rss_fitt, color="k", linewidth=3, label="fitt")
+    axs[1].set_ylim([np.min(rss_orig_sur) * 0.98, np.max(rss_orig_sur) * 1.02])
     axs[1].set_title("Fitted signal")
 
     for i in range(rssr_orig_sur.shape[1]):
