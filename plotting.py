@@ -11,7 +11,7 @@ import ev
 
 # Global variables
 SUBJECT = "sub-002ParkMabCm"
-NROIS = "500"
+NROIS = "100"
 NRAND = 100
 TR = 0.83
 FIGSIZE = (45, 30)
@@ -53,6 +53,9 @@ def plot_comparison(
     greymap = cm.get_cmap("Greys")
     colors = greymap(np.linspace(0, 0.65, rssr_orig_sur.shape[1]))
 
+    min_range = np.min(np.minimum(rss_orig_sur, rss_fitt)) * 0.9
+    max_range = np.max(np.maximum(rss_orig_sur, rss_fitt)) * 1.1
+
     _, axs = plt.subplots(5, 1, figsize=FIGSIZE)
     for i in range(rssr_orig_sur.shape[1]):
         axs[0].plot(rssr_orig_sur[:, i], color=colors[i], linewidth=0.5)
@@ -69,7 +72,7 @@ def plot_comparison(
         linewidth=3,
         label="orig_sur",
     )
-    axs[0].set_ylim([np.min(rss_orig_sur) * 0.98, np.max(rss_orig_sur) * 1.02])
+    axs[0].set_ylim([min_range, max_range])
     axs[0].set_title("Original signal")
 
     for i in range(rssr_orig_sur.shape[1]):
@@ -78,7 +81,7 @@ def plot_comparison(
         idxpeak_fitt, rss_fitt[idxpeak_fitt], "r*", label="fitt-peaks", markersize=20
     )
     axs[1].plot(rss_fitt, color="k", linewidth=3, label="fitt")
-    axs[1].set_ylim([np.min(rss_orig_sur) * 0.98, np.max(rss_orig_sur) * 1.02])
+    axs[1].set_ylim([min_range, max_range])
     axs[1].set_title("Fitted signal")
 
     for i in range(rssr_orig_sur.shape[1]):
