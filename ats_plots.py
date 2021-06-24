@@ -3,7 +3,7 @@ from os.path import join as opj
 import matplotlib.pyplot as plt
 import numpy as np
 
-prj_dir = "/export/home/eurunuela/public/PARK_VFERRER/PFM_data/sub-002ParkMabCm_200"
+prj_dir = "/bcbl/home/public/PARK_VFERRER/PFM_data/sub-002ParkMabCm_200"
 temp_dir = "/export/home/eurunuela/public/PARK_VFERRER/PFM_data/temp_sub-002ParkMabCm_200"
 n_rand = 100
 fig_size = (16, 9)
