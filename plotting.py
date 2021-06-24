@@ -282,6 +282,11 @@ def main():
     plot_ets_matrix(ets_auc, MAINDIR, "_AUC_original")
     plot_ets_matrix(ets_auc_denoised, MAINDIR, "_AUC_denoised")
 
+    # Save RSS time-series as text file for easier visualization on AFNI
+    rss_out = np.zeros(rss_auc.shape)
+    rss_out[idxpeak_auc] = rss_auc[idxpeak_auc]
+    np.savetxt(opj(MAINDIR, f"{DATAFILE[:-7]}_rss.1D"), rss_out)
+
     # Perform debiasing based on thresholded edge-time matrix
     beta, _ = ev.debiasing(
         DATAFILE, ATLAS, ets_auc_denoised, idx_u, idx_v, TR, MAINDIR, HISTORY
