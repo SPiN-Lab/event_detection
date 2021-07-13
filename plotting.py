@@ -10,7 +10,7 @@ from matplotlib import cm
 import ev
 
 # Global variables
-SUBJECT = "sub-002ParkMabCm"
+SUBJECT = "sub-003ParkPefsCm"
 NROIS = "100"
 NRAND = 100
 TR = 0.83
@@ -19,13 +19,14 @@ HISTORY = "Deconvolution based on event-detection."
 
 # Paths to files
 MAINDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS
-TEMPDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/temp_" + SUBJECT + "_" + NROIS
-ATS = np.loadtxt(opj(MAINDIR, "pb06.sub-002ParkMabCm.denoised_no_censor_ATS_abs_95.1D"))
+TEMPDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS + "/temp_" + SUBJECT + "_" + NROIS
+ats_name = "pb06." + SUBJECT + ".denoised_no_censor_ATS_abs_95.1D"
+ATS = np.loadtxt(opj(MAINDIR, ats_name))
 ATLAS = opj(TEMPDIR, "atlas.nii.gz")
-DATAFILE = opj(MAINDIR, "pb06.sub-002ParkMabCm.denoised_no_censor.nii.gz")
-BETAFILE = opj(MAINDIR, "pb06.sub-002ParkMabCm.denoised_no_censor_beta_95.nii.gz")
-FITTFILE = opj(MAINDIR, "pb06.sub-002ParkMabCm.denoised_no_censor_fitt_95.nii.gz")
-AUCFILE = opj(MAINDIR, f"sub-002ParkMabCm_AUC_{NROIS}.nii.gz")
+DATAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor.nii.gz")
+BETAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_beta_95.nii.gz")
+FITTFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_fitt_95.nii.gz")
+AUCFILE = opj(MAINDIR, f"{SUBJECT}_AUC_{NROIS}.nii.gz")
 
 # Font size for plots
 font = {"weight": "normal", "size": 22}
