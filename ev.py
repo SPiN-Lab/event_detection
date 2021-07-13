@@ -7,6 +7,7 @@ from joblib import Parallel, delayed
 from nilearn.input_data import NiftiLabelsMasker
 from scipy.stats import zscore
 
+import atlas_mod
 from Debiasing.debiasing_functions import debiasing_block, debiasing_spike
 from Debiasing.hrf_matrix import HRFMatrix
 
@@ -255,12 +256,16 @@ def debiasing(data_file, mask, mtx, idx_u, idx_v, tr, out_dir, history_str):
     beta_4D = masker.inverse_transform(beta)
     beta_file = join(out_dir, f"{basename(data_file[:-7])}_beta_ETS.nii.gz")
     beta_4D.to_filename(beta_file)
-    subprocess.run(f"3dNotes {join(out_dir, beta_file)} -h {history_str}", shell=True)
+    atlas_mod.inverse_transform(beta_file, data_file)
+    subprocess.run(f"3dNotes {join(out_dir, beta_file)} -h {history_str}",
+                   shell=True)
 
     fitt_4D = masker.inverse_transform(fitt)
     fitt_file = join(out_dir, f"{basename(data_file[:-7])}_fitt_ETS.nii.gz")
     fitt_4D.to_filename(fitt_file)
-    subprocess.run(f"3dNotes {join(out_dir, fitt_file)} -h {history_str}", shell=True)
+    subprocess.run(f"3dNotes {join(out_dir, fitt_file)} -h {history_str}",
+                   shell=True)
+    atlas_mod.inverse_transform(beta_file, data_file)
 
     print("Debiasing finished and files saved.")
 
