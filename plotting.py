@@ -6,8 +6,18 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import cm
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+import matplotlib.pylab as pylab
 
 import ev
+
+fontsize = 28
+params = {'legend.fontsize': fontsize,
+         'axes.labelsize': fontsize,
+         'axes.titlesize': fontsize,
+         'xtick.labelsize': fontsize,
+         'ytick.labelsize': fontsize}
+pylab.rcParams.update(params)
 
 # Global variables
 SUBJECT = "sub-003ParkPefsCm"
@@ -20,6 +30,7 @@ HISTORY = "Deconvolution based on event-detection."
 # Paths to files
 MAINDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS
 TEMPDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS + "/temp_" + SUBJECT + "_" + NROIS
+ORIGDIR = "/bcbl/home/public/PARK_VFERRER/PREPROC/" + SUBJECT + "/func/task-restNorm_acq-MB3_run-01"
 ats_name = "pb06." + SUBJECT + ".denoised_no_censor_ATS_abs_95.1D"
 ATS = np.loadtxt(opj(MAINDIR, ats_name))
 ATLAS = opj(TEMPDIR, "atlas.nii.gz")
@@ -178,17 +189,53 @@ def plot_all(
     plt.savefig(opj(MAINDIR, "event_detection_all.png"), dpi=300)
 
 
-def plot_ets_matrix(ets, outdir, sufix="", vmin=-0.5, vmax=0.5):
+def plot_ets_matrix(ets, outdir, sufix="", dvars=None, enorm=None, peaks=None, vmin=-0.5, vmax=0.5):
     """
     Plots edge-time matrix
     """
-    plt.figure(figsize=FIGSIZE)
-    plt.imshow(ets.T, vmin=vmin, vmax=vmax, cmap="bwr", aspect="auto")
-    plt.title("Edge-time series")
-    plt.xlabel("Time (TR)")
-    plt.ylabel("Edge-edge connections")
-    plt.colorbar()
-    plt.savefig(opj(outdir, f"ets{sufix}.png"), dpi=300)
+    if dvars is not None and enorm is not None:
+        # widths = [1]
+        # heights = [2, 1, 1]
+        # gs = dict(width_ratios=widths, height_ratios=heights)
+        # fig, axs = plt.subplots(3, 1, figsize=FIGSIZE,gridspec_kw=gs)
+        # im = axs[0].imshow(ets.T, vmin=vmin, vmax=vmax, cmap="bwr", aspect="auto")
+        # axs[0].set_title("Edge-time series")
+        # axs[0].set_ylabel("Edge-edge connections")
+        # fig.colorbar(im, orientation="vertical", ax=axs[0]) # ax=axs.ravel().tolist()
+        # axs[1].plot(dvars)
+        # axs[1].set_title("DVARS")
+        # axs[2].plot(enorm)
+        # axs[2].set_title("ENORM")
+        # axs[2].set_xlabel("Time (TR)")
+        fig = plt.subplots(figsize=FIGSIZE)
+        ax0 = plt.subplot(111)
+        divider = make_axes_locatable(ax0)
+        ax1 = divider.append_axes("bottom", size="25%", pad=1)
+        ax2 = divider.append_axes("bottom", size="25%", pad=1)
+        cax = divider.append_axes("right", size="5%", pad=0.08)
+        im = ax0.imshow(ets.T, vmin=vmin, vmax=vmax, cmap="bwr", aspect="auto")
+        ax0.set_ylabel("Edge-edge connections")
+        cb = plt.colorbar(im, orientation="vertical", ax=ax0, cax=cax)  # ax=axs.ravel().tolist()
+        dvars[1] = np.mean(dvars)
+        ax1.plot(dvars)
+        ax1.set_title("DVARS")
+        ax1.margins(0, 0)
+        for i in peaks:
+            ax1.axvspan(i, i+1, facecolor='b', alpha=0.5)
+            ax2.axvspan(i, i+1, facecolor='b', alpha=0.5)
+        ax2.plot(enorm)
+        ax2.set_title("ENORM")
+        ax2.set_xlabel("Time (TR)")
+        ax2.margins(0, 0)
+        plt.savefig(opj(outdir, f"ets{sufix}.png"), dpi=300)
+    else:
+        fig, axs = plt.subplots(1, 1, figsize=FIGSIZE)
+        plt.imshow(ets.T, vmin=vmin, vmax=vmax, cmap="bwr", aspect="auto")
+        plt.title("Edge-time series")
+        plt.xlabel("Time (TR)")
+        plt.ylabel("Edge-edge connections")
+        plt.colorbar()
+        plt.savefig(opj(outdir, f"ets{sufix}.png"), dpi=300)
 
 
 def main():
@@ -277,11 +324,13 @@ def main():
 
     print("Plotting original, AUC, and AUC-denoised ETS matrices...")
     # Plot ETS matrix of original signal
-    plot_ets_matrix(ets_orig_sur, MAINDIR, "_original")
+    DVARS = np.loadtxt(opj(ORIGDIR, SUBJECT + "_dvars.1D"))
+    ENORM = np.loadtxt(opj(ORIGDIR, SUBJECT + "_Motion_enorm.1D"))
+    plot_ets_matrix(ets_orig_sur, MAINDIR, "_original", DVARS, ENORM, idxpeak_auc)
 
     # Plot ETS and denoised ETS matrices of AUC
-    plot_ets_matrix(ets_auc, MAINDIR, "_AUC_original")
-    plot_ets_matrix(ets_auc_denoised, MAINDIR, "_AUC_denoised")
+    plot_ets_matrix(ets_auc, MAINDIR, "_AUC_original", DVARS, ENORM, idxpeak_auc)
+    plot_ets_matrix(ets_auc_denoised, MAINDIR, "_AUC_denoised", DVARS, ENORM, idxpeak_auc)
 
     # Save RSS time-series as text file for easier visualization on AFNI
     rss_out = np.zeros(rss_auc.shape)
@@ -295,7 +344,7 @@ def main():
 
     print("Plotting edge-time matrix of ETS-based deconvolution.")
     denoised_beta_ets, _, _ = ev.calculate_ets(beta, beta.shape[1])
-    plot_ets_matrix(denoised_beta_ets, MAINDIR, "_beta_denoised")
+    plot_ets_matrix(denoised_beta_ets, MAINDIR, "_beta_denoised",DVARS, ENORM, idxpeak_auc)
 
     print("THE END")
 
