@@ -1,5 +1,6 @@
 """Plotting script for event detection."""
 
+from cli_plotting import _get_parser
 from os.path import join as opj
 
 import matplotlib
@@ -13,34 +14,18 @@ import ev
 
 fontsize = 28
 params = {'legend.fontsize': fontsize,
-         'axes.labelsize': fontsize,
-         'axes.titlesize': fontsize,
-         'xtick.labelsize': fontsize,
-         'ytick.labelsize': fontsize}
+          'axes.labelsize': fontsize,
+          'axes.titlesize': fontsize,
+          'xtick.labelsize': fontsize,
+          'ytick.labelsize': fontsize}
 pylab.rcParams.update(params)
-
 # Global variables
-SUBJECT = "sub-003ParkPefsCm"
-NROIS = "100"
 NRAND = 100
 TR = 0.83
 FIGSIZE = (45, 30)
 HISTORY = "Deconvolution based on event-detection."
-
-# Paths to files
-MAINDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS
-TEMPDIR = "/bcbl/home/public/PARK_VFERRER/PFM_data/" + SUBJECT + "_" + NROIS + "/temp_" + SUBJECT + "_" + NROIS
-ORIGDIR = "/bcbl/home/public/PARK_VFERRER/PREPROC/" + SUBJECT + "/func/task-restNorm_acq-MB3_run-01"
-ats_name = "pb06." + SUBJECT + ".denoised_no_censor_ATS_abs_95.1D"
-ATS = np.loadtxt(opj(MAINDIR, ats_name))
-ATLAS = opj(TEMPDIR, "atlas.nii.gz")
-DATAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor.nii.gz")
-BETAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_beta_95.nii.gz")
-FITTFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_fitt_95.nii.gz")
-AUCFILE = opj(MAINDIR, f"{SUBJECT}_AUC_{NROIS}.nii.gz")
-
 # Font size for plots
-font = {"weight": "normal", "size": 22}
+font = {"weight": "normal", "size": 28}
 matplotlib.rc("font", **font)
 
 
@@ -58,6 +43,7 @@ def plot_comparison(
     rssr_auc,
     idxpeak_auc,
     ats,
+    outdir,
 ):
     """
     Plot comparison of different RSS with vertical subplots.
@@ -116,11 +102,17 @@ def plot_comparison(
     axs[4].set_title("Activation time-series")
 
     plt.legend()
-    plt.savefig(opj(MAINDIR, "event_detection.png"), dpi=300)
+    plt.savefig(opj(outdir, "event_detection.png"), dpi=300)
 
 
 def plot_all(
-    rss_orig_sur, idxpeak_orig_sur, rss_beta, idxpeak_beta, rss_fitt, idxpeak_fitt
+    rss_orig_sur,
+    idxpeak_orig_sur,
+    rss_beta,
+    idxpeak_beta,
+    rss_fitt,
+    idxpeak_fitt,
+    outdir,
 ):
     """
     Plot all RSS lines on same figure.
@@ -186,7 +178,7 @@ def plot_all(
         label="fitted",
     )
     plt.legend()
-    plt.savefig(opj(MAINDIR, "event_detection_all.png"), dpi=300)
+    plt.savefig(opj(outdir, "event_detection_all.png"), dpi=300)
 
 
 def plot_ets_matrix(ets, outdir, sufix="", dvars=None, enorm=None, peaks=None, vmin=-0.5, vmax=0.5):
@@ -238,10 +230,27 @@ def plot_ets_matrix(ets, outdir, sufix="", dvars=None, enorm=None, peaks=None, v
         plt.savefig(opj(outdir, f"ets{sufix}.png"), dpi=300)
 
 
-def main():
+def main(argv=None):
     """
     Main function to perform event detection and plot results.
     """
+    options = _get_parser().parse_args(argv)
+    kwargs = vars(options)
+
+    # Global variables
+    SUBJECT = kwargs["subject"][0]
+    NROIS = kwargs["nROI"][0]
+    # Paths to files
+    MAINDIR = kwargs["dir"][0]
+    TEMPDIR = opj(MAINDIR, f"temp_{SUBJECT}_{NROIS}")
+    ORIGDIR = "/bcbl/home/public/PARK_VFERRER/PREPROC/" + SUBJECT + "/func/task-restNorm_acq-MB3_run-01"
+    ats_name = "pb06." + SUBJECT + ".denoised_no_censor_ATS_abs_95.1D"
+    ATS = np.loadtxt(opj(MAINDIR, ats_name))
+    ATLAS = opj(TEMPDIR, "atlas.nii.gz")
+    DATAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor.nii.gz")
+    BETAFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_beta_95.nii.gz")
+    FITTFILE = opj(MAINDIR, f"pb06.{SUBJECT}.denoised_no_censor_fitt_95.nii.gz")
+    AUCFILE = opj(MAINDIR, f"{SUBJECT}_AUC_{NROIS}.nii.gz")
     # Perform event detection on BETAS
     print("Performing event-detection on betas...")
     (
@@ -315,11 +324,13 @@ def main():
         rssr_auc,
         idxpeak_auc,
         ATS,
+        MAINDIR,
     )
 
     # Plot all rss time series, null, and significant peaks in one plot
     plot_all(
-        rss_orig_sur, idxpeak_orig_sur, rss_beta, idxpeak_beta, rss_fitt, idxpeak_fitt
+        rss_orig_sur, idxpeak_orig_sur, rss_beta, idxpeak_beta, rss_fitt,
+        idxpeak_fitt, MAINDIR
     )
 
     print("Plotting original, AUC, and AUC-denoised ETS matrices...")
